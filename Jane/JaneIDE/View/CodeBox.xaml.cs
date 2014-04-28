@@ -16,20 +16,17 @@ using ScintillaNET;
 
 namespace JaneIDE.View
 {
-    /// <summary>
-    /// Interaction logic for CodeBox.xaml
-    /// </summary>
     public partial class CodeBox : UserControl
     {
-        
+        public ScintillaNET.Scintilla codeBox; 
         public CodeBox()
         {
             InitializeComponent();
-            ScintillaNET.Scintilla codeBox = (ScintillaNET.Scintilla)wfh.Child;
+            codeBox = (ScintillaNET.Scintilla)wfh.Child;
             // Initialize CodeBox by ScintillaNET
 
             // Integration fix from official instruction
-           // ScintillaNET.Scintilla CodeBox = (ScintillaNET.Scintilla)wfh.Child; 
+           // ; 
 
             // Codebox configuration from JaNE.xml
             codeBox.ConfigurationManager.Language = "jane";
@@ -62,33 +59,46 @@ namespace JaneIDE.View
 
             //Handler for snippets
             codeBox.KeyDown += CodeBox_KeyDown;
+            this.DebugTools();
+        }
 
+        void DebugTools()
+        {
             codeBox.Text = "This is \r\n a test.\r\nThis is only a test";
             this.BreakPointMarker(2);
             this.ErrorMarker(1);
             this.CurrentMarker(3);
+            List<string> context = new List<string>();
+            List<string> context2 = new List<string>();
+            context.Add("qwerty");
+            context.Add("qwe");
+            context2.Add("qwe");
+            this.AddContext(context2);
+            this.AddContext(context);
+            //this.RemoveContext(context);
         }
-
-
         void CodeBox_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
         {
-            ScintillaNET.Scintilla codeBox = (ScintillaNET.Scintilla)wfh.Child;
             if (e.Alt && e.KeyCode == System.Windows.Forms.Keys.Space && e.Control)
             {
                codeBox.Snippets.ShowSnippetList();
+            }
+
+            if (e.KeyCode == System.Windows.Forms.Keys.E && e.Control)
+            {
+                this.CurrentMarker(codeBox.Lines.Current.Number+1);
+               
             }
         }
 
         void CodeBox_CharAdded(object sender, ScintillaNET.CharAddedEventArgs e)
         {
-            ScintillaNET.Scintilla codeBox = (ScintillaNET.Scintilla)wfh.Child;
             if (Char.IsLetter(e.Ch))
             codeBox.AutoComplete.Show();
         }
 
         void ErrorMarker(int stringNum)
             {
-                ScintillaNET.Scintilla codeBox = (ScintillaNET.Scintilla)wfh.Child;
                 Marker marker = codeBox.Markers[0];
                 marker.Symbol = MarkerSymbol.Circle;
                 marker.BackColor = System.Drawing.Color.Red;          
@@ -96,7 +106,6 @@ namespace JaneIDE.View
             }
         void BreakPointMarker(int stringNum)
             {
-                ScintillaNET.Scintilla codeBox = (ScintillaNET.Scintilla)wfh.Child;
                 Marker marker = codeBox.Markers[1];
                 marker.Symbol = MarkerSymbol.FullRectangle;
                 marker.BackColor = System.Drawing.Color.Blue;
@@ -104,11 +113,22 @@ namespace JaneIDE.View
             }
         void CurrentMarker(int stringNum)
         {
-            ScintillaNET.Scintilla codeBox = (ScintillaNET.Scintilla)wfh.Child;
             Marker marker = codeBox.Markers[3];
             marker.Symbol = MarkerSymbol.Arrow;
             marker.BackColor = System.Drawing.Color.Green;
             codeBox.Lines[stringNum - 1].AddMarker(marker);
         }
+
+       void AddContext(List<string> context)
+        {
+            codeBox.AutoComplete.List.AddRange(context);
+            codeBox.AutoComplete.List = codeBox.AutoComplete.List.Distinct().ToList();
+            codeBox.AutoComplete.List.Sort();
+        }
+       void RemoveContext(List<string> context)
+       {
+           codeBox.AutoComplete.List = codeBox.AutoComplete.List.Except(context).ToList();
+           codeBox.AutoComplete.List.Sort();
+       } 
     }
 }
